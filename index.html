@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kennis toets A</title>
+  <style>
+    :root { --maxw: 960px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; line-height: 1.5; margin: 0; background: #0b1220; color: #e8eef8; }
+    a { color: inherit; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 24px; }
+    header { padding: 16px 0 8px; }
+    h1 { font-size: clamp(1.4rem, 2.5vw, 2rem); margin: 0 0 4px; }
+    .sub { opacity: .8; font-size: .95rem; margin-bottom: 16px; }
+    .card { background: #121a2b; border: 1px solid #29324a; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+    .card .in { padding: 20px; }
+    .actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+    button { cursor: pointer; border: 0; padding: 10px 16px; border-radius: 12px; font-weight: 600; }
+    .btn-primary { background: #3a86ff; color: white; }
+    .btn-secondary { background: #2a334a; color: #e8eef8; }
+    .btn-danger { background: #ef476f; color: white; }
+    .muted { opacity: .75; }
+
+    .q { padding: 18px; border: 1px solid #233153; border-radius: 12px; margin-bottom: 16px; background: #0f1526; }
+    .q h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .q .meta { font-size: .85rem; opacity: .8; margin-bottom: 8px; }
+    .options { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    label.opt { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: start; padding: 10px; border-radius: 10px; border: 1px solid #223153; background: #0c1222; }
+    input[type="radio"] { transform: translateY(2px); }
+    .result { margin-top: 20px; padding: 16px; border-radius: 12px; border: 1px solid #2a3b66; background: #0c1426; }
+    .stat { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+    .ok { background: #144d2a; color: #a6f4c5; }
+    .ko { background: #5b1d2b; color: #fec5d0; }
+    .warn { background: #42340b; color: #ffe5a1; }
+    .perq { border-top: 1px dashed #2d3d64; padding-top: 12px; margin-top: 12px; }
+    .perq h4 { margin: 0 0 6px; font-size: .95rem; }
+    .key { opacity: .9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    footer { margin: 32px 0; opacity: .7; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>De Wekelijkse Digitale Weerbaarheid Quiz — Week 43-2025</h1>
+      <div class="sub">Periode: 20 t/m 25 oktober 2025 · 20 meerkeuzevragen · bron: Journaals & “Vraag van de week”.</div>
+    </header>
+
+    <section class="card">
+      <div class="in">
+        <div id="quiz"></div>
+        <div class="actions">
+          <button id="submit" class="btn-primary">Inleveren en nakijken</button>
+          <button id="reset" class="btn-secondary">Opnieuw beginnen</button>
+          <span class="muted" id="progress"></span>
+        </div>
+        <div id="result" class="result" hidden></div>
+      </div>
+    </section>
+
+    <footer>
+      © Week 43-2025 Cybercrimeinfo quiz
+    </footer>
+  </div>
+
+  <script>
+    // ————————————————
+    //  Quiz data (nieuw voor week 43-2025)
+    // ————————————————
+    const QUESTIONS = [
+      {cat:"Cybercrime", q:"Wat is volgens de bronnen de belangrijkste motivatie achter 'Cybercrime'?", opts:{A:"Politieke onrust veroorzaken", B:"Ontwrichting van vitale infrastructuur", C:"Geld verdienen", D:"Het verspreiden van desinformatie"}, a:"C"},
+      {cat:"Cyberwar", q:"Wat is volgens de bronnen het belangrijkste doel van 'Cyberwar'?", opts:{A:"Het stelen van data (Het nieuwe goud)", B:"Het veroorzaken van ontwrichting", C:"Het plegen van grootschalige fraude", D:"Het werven van gemotiveerde individuen"}, a:"B"},
+      {cat:"Daders van Cybercrime", q:"Welke van de volgende entiteiten wordt in de bronnen genoemd als een potentiële dader van cybercriminaliteit?", opts:{A:"Overheden (S.A.)", B:"Hack-visten", C:"Terroristen", D:"Alle bovenstaande"}, a:"D"},
+      {cat:"Data en Cybercrime", q:"Hoe wordt de ‘data online’ in de bronnen omschreven in de context van cybercriminaliteit?", opts:{A:"Het nieuwe paspoort", B:"Het nieuwe goud", C:"De nieuwe infrastructuur", D:"Het nieuwe doelwit"}, a:"B"},
+      {cat:"Communicatiekanalen", q:"Welk communicatiemiddel wordt in de bronnen beschreven als de 'Hoofdingang voor hackers'?", opts:{A:"De website van de organisatie", B:"E-mail", C:"Fysieke toegang (deur dicht)", D:"WhatsApp/Smishing"}, a:"B"},
+      {cat:"FUD", q:"Wat is volgens de bronnen de betekenis van de afkorting 'FUD' die wordt gebruikt in de context van de aanvalscasus?", opts:{A:"Fraude, Uitbuiting en Diefstal", B:"Fear, Uncertainty, and Doubt (Angst, Onzekerheid en Twijfel)", C:"Fast, Unregulated, and Dangerous", D:"Fysieke Uitdagingen en Digitale Kwetsbaarheden"}, a:"B"},
+      {cat:"Aanvalsvormen", q:"Welke van de volgende aanvalsvormen is NIET specifiek genoemd in de lijst van 24 aanvalsopties die cybercriminelen hebben?", opts:{A:"CEO aanval", B:"Ransomware aanval", C:"Social Media Influencer aanval", D:"Zeroday aanval"}, a:"C"},
+      {cat:"Insiders", q:"Een medewerker klikt per ongeluk op een schadelijke link of deelt onbedoeld een wachtwoord. Welk type insider is dit volgens de bronnen?", opts:{A:"Kwaadwillige insider", B:"Omgekochte insider", C:"Onbewuste insider", D:"Cybervandale"}, a:"C"},
+      {cat:"Kwetsbaarheden - Mens vs. Techniek", q:"Welk aspect behoort tot de 'Mens' als kwetsbaarheid, in tegenstelling tot de 'Techniek'?", opts:{A:"De digitale infrastructuur", B:"Kwetsbaarheden in het DMARC protocol", C:"Emoties", D:"Tweefactor login (2FA)"}, a:"C"},
+      {cat:"CM.com Case Study", q:"In de casus van CM.com, wat was een van de fouten die bij Eveline (de werknemer) lag?", opts:{A:"Ze had het DMARC protocol niet geactiveerd", B:"Ze heeft het website adres niet gecontroleerd", C:"Ze had een zwak wachtwoord", D:"Ze had haar fysieke badge niet zichtbaar gedragen"}, a:"B"},
+      {cat:"Organisatorische Fouten", q:"Wat was een van de organisatorische (CM.com) fouten in de besproken casus waardoor de aanval succesvol was?", opts:{A:"Personeel was onvoldoende getraind", B:"Er werd een Brute Force aanval ingezet", C:"Er werd geen OSINT uitgevoerd", D:"De kritieke ruimtes waren niet op slot"}, a:"A"},
+      {cat:"OSINT", q:"Welke techniek werd gebruikt voor het vooronderzoek naar een doelwit (zoals CM.com) en het bepalen van de toegangsweg?", opts:{A:"MFA (Multi-Factor Authenticatie)", B:"DMARC", C:"OSINT / Googelen", D:"Jackpoing aanval"}, a:"C"},
+      {cat:"Aanvalsstrategie", q:"Wat is het verschil tussen een 'Spray aanval' en een 'Spear aanval' in de context van de aanvalsmethode die gekozen kan worden?", opts:{A:"Spray is gericht op mobiele apparaten, Spear op vaste netwerken.", B:"Spray is gericht op de Techniek, Spear op de Mens.", C:"Spear Phishing is gericht op een specifiek doelwit (bijv. CFO/CEO), terwijl Spray breder is.", D:"Er is geen wezenlijk verschil, het zijn synoniemen."}, a:"C"},
+      {cat:"Cyberwar Impact", q:"Welke van de volgende is een effect van 'Cyberwar' dat overheden en vitale infrastructuur merken?", opts:{A:"Hacks, fraude en oplichting", B:"Desinformatie", C:"Het onbewust delen van wachtwoorden", D:"Toegang tot het darkweb"}, a:"B"},
+      {cat:"CM.com Beveiliging", q:"Wat ontbrak er bij CM.com, waardoor het klikken op een phishing link door Eveline direct toegang kon opleveren voor de criminelen?", opts:{A:"Een goed wachtwoordbeleid", B:"Tweefactor login (2FA) / MFA", C:"De DMARC-implementatie", D:"De controle op fysieke meelopers"}, a:"B"},
+      {cat:"Digitale Kwetsbaarheden", q:"Welke drie brede kwetsbaarheden/toegangswegen worden behandeld in de context van digitale veiligheid in de bronnen?", opts:{A:"Sociaal, Techniek, Economie", B:"Mens, Techniek, Organisatie", C:"Brein, Netwerk, Gezin", D:"Fysiek, Digitaal, Emotioneel"}, a:"B"},
+      {cat:"Beveiligingsmaatregelen", q:"Welk protocol wordt genoemd als een technische maatregel die helpt om bedrieglijke e-mailberichten te voorkomen?", opts:{A:"MFA", B:"OSINT", C:"DMARC", D:"FUD"}, a:"C"},
+      {cat:"Beveiliging van Ruimtes", q:"Wat is een van de belangrijkste stappen bij het beveiligen van kritieke ruimtes (zoals serverruimtes) en patchkasten?", opts:{A:"Altijd een beveiliger voor de deur plaatsen.", B:"Alleen toegang verlenen aan de CEO.", C:"Altijd op slot houden.", D:"Dagelijks het wachtwoord wijzigen."}, a:"C"},
+      {cat:"Darkweb en Data", q:"Welke criminele groep werd als voorbeeld genoemd in de bronnen in relatie tot slachtoffers en data op het darkweb?", opts:{A:"Anonymous", B:"LockBit", C:"P6housse", D:"Cybercrimeinfo.nl"}, a:"B"},
+      {cat:"Psychologische Manipulatie", q:"Welk sociaal element is NIET specifiek genoemd als een van de drijfveren die cybercriminelen gebruiken om slachtoffers te manipuleren?", opts:{A:"Tijdsdruk", B:"Geloofwaardigheid", C:"Hebzucht", D:"Medelijden"}, a:"D"}
+    ];
+
+    // ————————————————
+    //  Render quiz
+    // ————————————————
+    const $quiz = document.getElementById('quiz');
+    const $progress = document.getElementById('progress');
+    const $result = document.getElementById('result');
+    const $submit = document.getElementById('submit');
+    const $reset = document.getElementById('reset');
+
+    function render() {
+      $quiz.innerHTML = '';
+      QUESTIONS.forEach((it, idx) => {
+        const qId = `q${idx+1}`;
+        const wrap = document.createElement('div');
+        wrap.className = 'q';
+        wrap.innerHTML = `
+          <div class="meta">Categorie: <strong>${it.cat}</strong> · Vraag ${idx+1} van ${QUESTIONS.length}</div>
+          <h3>${it.q}</h3>
+          <div class="options">
+            ${Object.entries(it.opts).map(([key, val]) => `
+              <label class="opt" for="${qId}${key}">
+                <input type="radio" id="${qId}${key}" name="${qId}" value="${key}" />
+                <span><strong>${key})</strong> ${val}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+        $quiz.appendChild(wrap);
+      });
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const answered = [...document.querySelectorAll('.q')].filter(q => q.querySelector('input[type=radio]:checked')).length;
+      $progress.textContent = `${answered}/${QUESTIONS.length} beantwoord`;
+    }
+
+    function firstUnanswered() {
+      for (let i=0;i<QUESTIONS.length;i++) {
+        const qId = `q${i+1}`;
+        if (!document.querySelector(`input[name=${CSS.escape(qId)}]:checked`)) return i;
+      }
+      return -1;
+    }
+
+    function disableAll() {
+      document.querySelectorAll('input[type=radio]').forEach(el => el.disabled = true);
+      $submit.disabled = true;
+    }
+
+    function enableAll() {
+      document.querySelectorAll('input[type=radio]').forEach(el => el.disabled = false);
+      $submit.disabled = false;
+      $result.hidden = true;
+    }
+
+    function resetAll() {
+      document.querySelectorAll('input[type=radio]:checked').forEach(el => el.checked = false);
+      document.querySelectorAll('.perq').forEach(el => el.remove());
+      enableAll();
+      updateProgress();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function grade() {
+      let score = 0;
+      // clear previous per-question feedback
+      document.querySelectorAll('.perq').forEach(el => el.remove());
+
+      QUESTIONS.forEach((it, idx) => {
+        const qId = `q${idx+1}`;
+        const chosen = document.querySelector(`input[name=${CSS.escape(qId)}]:checked`);
+        const correctLetter = it.a;
+        const correctText = it.opts[correctLetter];
+        const host = $quiz.children[idx];
+
+        const box = document.createElement('div');
+        box.className = 'perq';
+        if (chosen && chosen.value === correctLetter) {
+          score++;
+          box.innerHTML = `<div class="badge ok">✓ Goed</div> <span class="muted">Juiste optie: <span class="key">${correctLetter}) ${correctText}</span></span>`;
+        } else {
+          const user = chosen ? `${chosen.value}) ${it.opts[chosen.value]}` : '—';
+          box.innerHTML = `<div class="badge ko">✗ Fout</div> <span class="muted">Jouw keuze: <span class="key">${user}</span></span><br><span>Juiste antwoord: <span class="key">${correctLetter}) ${correctText}</span></span>`;
+        }
+        host.appendChild(box);
+      });
+
+      const pct = Math.round((score / QUESTIONS.length) * 100);
+      $result.hidden = false;
+      $result.innerHTML = `
+        <strong>Score</strong><br>
+        Je scoorde <strong>${score}</strong> van de <strong>${QUESTIONS.length}</strong> vragen (<strong>${pct}%</strong>).
+        <div class="stat">
+          <div><span class="badge ${pct>=80? 'ok': pct>=60? 'warn' : 'ko'}">${pct}%</span> Behaalde percentage</div>
+          <div><span class="badge">${new Date().toLocaleDateString('nl-NL')}</span> Ingevuld op</div>
+        </div>
+      `;
+    }
+
+    // Wire up
+    render();
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type=radio]')) updateProgress();
+    });
+
+    $submit.addEventListener('click', () => {
+      const i = firstUnanswered();
+      if (i !== -1) {
+        document.querySelectorAll('.q')[i].scrollIntoView({behavior:'smooth', block:'center'});
+        $result.hidden = false;
+        $result.innerHTML = '<span class="badge warn">Let op</span> Je hebt nog niet alle vragen beantwoord.';
+        return;
+      }
+      grade();
+      disableAll();
+      $result.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+
+    $reset.addEventListener('click', resetAll);
+  </script>
+</body>
+</html>
